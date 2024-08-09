@@ -97,13 +97,28 @@ const client = new MongoClient(process.env.DB_URI, {
         },
       }
     );
-    console.log(result);
     res.send(result);
   });
 
   app.patch("/donation-profile", verifyToken, async (req, res) => {
     const data = req.body;
     data.email = req.user.email;
+    const result = await donationProfileCollection.updateOne(
+      { email: req.user.email },
+      {
+        $set: {
+          ...data,
+        },
+      },
+      {
+        upsert: true,
+      }
+    );
+    res.send(result);
+  });
+
+  app.patch("/donation-profile/active", verifyToken, async (req, res) => {
+    const data = req.body;
     const result = await donationProfileCollection.updateOne(
       { email: req.user.email },
       {
