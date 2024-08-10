@@ -80,6 +80,11 @@ const client = new MongoClient(process.env.DB_URI, {
     res.send(result);
   });
 
+  app.get("/requests", async (req, res) => {
+    const result = await requestCollection.find().toArray();
+    res.send(result);
+  });
+
   app.get("/donars", async (req, res) => {
     const result = await donationProfileCollection.find().toArray();
     res.send(result);
