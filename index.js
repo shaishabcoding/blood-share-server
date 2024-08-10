@@ -2,7 +2,7 @@ const express = require("express");
 const cors = require("cors");
 require("dotenv").config();
 const jwt = require("jsonwebtoken");
-const { MongoClient, ServerApiVersion } = require("mongodb");
+const { MongoClient, ServerApiVersion, ObjectId } = require("mongodb");
 
 const app = express();
 const port = process.env.PORT || 5000;
@@ -85,6 +85,13 @@ const client = new MongoClient(process.env.DB_URI, {
     res.send(result);
   });
 
+  app.get("/requests/my", verifyToken, async (req, res) => {
+    const result = await requestCollection
+      .find({ email: req.user.email })
+      .toArray();
+    res.send(result);
+  });
+
   app.get("/donars", async (req, res) => {
     const result = await donationProfileCollection.find().toArray();
     res.send(result);
@@ -135,6 +142,14 @@ const client = new MongoClient(process.env.DB_URI, {
         upsert: true,
       }
     );
+    res.send(result);
+  });
+
+  app.delete("/requests/:id", verifyToken, async (req, res) => {
+    const result = await requestCollection.deleteOne({
+      email: req.user.email,
+      _id: new ObjectId(req.params.id),
+    });
     res.send(result);
   });
 })();
