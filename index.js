@@ -81,8 +81,19 @@ const client = new MongoClient(process.env.DB_URI, {
   });
 
   app.get("/requests", async (req, res) => {
-    const result = await requestCollection.find().toArray();
-    res.send(result);
+    let { bloodGroup, location } = req.query;
+    bloodGroup = bloodGroup?.replace(" ", "+");
+
+    const requests = await requestCollection
+      .find({
+        $and: [
+          { location: { $regex: location, $options: "i" } },
+          { bloodGroup: { $regex: bloodGroup, $options: "i" } },
+        ],
+      })
+      .toArray();
+    const requestsCount = await requestCollection.countDocuments();
+    res.send({ requests, requestsCount });
   });
 
   app.get("/requests/my", verifyToken, async (req, res) => {
@@ -94,7 +105,7 @@ const client = new MongoClient(process.env.DB_URI, {
 
   app.get("/donars", async (req, res) => {
     let { bloodGroup, location } = req.query;
-    bloodGroup = bloodGroup.replace(" ", "+");
+    bloodGroup = bloodGroup?.replace(" ", "+");
 
     const donars = await donationProfileCollection
       .find({
