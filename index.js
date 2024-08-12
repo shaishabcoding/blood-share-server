@@ -60,7 +60,37 @@ const client = new MongoClient(process.env.DB_URI, {
     }
     next();
   };
+  // admin routes
+  app.get("/users", verifyToken, async (req, res) => {
+    const users = await userCollection.find().toArray();
+    const usersCount = await userCollection.countDocuments();
+    res.send({ users, usersCount });
+  });
 
+  app.get("/users/admin", verifyToken, async (req, res) => {
+    const { email } = req.user;
+    const query = { email };
+    const user = await userCollection.findOne(query);
+    res.send({ admin: user?.role === "admin" });
+  });
+
+  app.put("/users/admin/:email", verifyToken, async (req, res) => {
+    const result = await userCollection.updateOne(
+      { email: req.params.email },
+      {
+        $set: { role: "admin" },
+      }
+    );
+    res.send(result);
+  });
+
+  app.delete("/users/:id", verifyToken, async (req, res) => {
+    const result = await userCollection.deleteOne({
+      _id: new ObjectId(req.params.id),
+    });
+    res.send(result);
+  });
+  // admin routes end
   app.post("/users", async (req, res) => {
     const user = req.body;
     const query = { email: user.email };
