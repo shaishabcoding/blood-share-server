@@ -97,6 +97,13 @@ const client = new MongoClient(process.env.DB_URI, {
     });
     res.send(result);
   });
+
+  app.delete("/requests/:id", verifyToken, async (req, res) => {
+    const result = await requestCollection.deleteOne({
+      _id: new ObjectId(req.params.id),
+    });
+    res.send(result);
+  });
   // admin routes end
   app.post("/users", async (req, res) => {
     const user = req.body;
