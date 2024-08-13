@@ -61,20 +61,20 @@ const client = new MongoClient(process.env.DB_URI, {
     next();
   };
   // admin routes
-  app.get("/users", verifyToken, async (req, res) => {
+  app.get("/users", verifyToken, verifyAdmin, async (req, res) => {
     const users = await userCollection.find().toArray();
     const usersCount = await userCollection.countDocuments();
     res.send({ users, usersCount });
   });
 
-  app.get("/users/admin", verifyToken, async (req, res) => {
+  app.get("/users/admin", verifyToken, verifyAdmin, async (req, res) => {
     const { email } = req.user;
     const query = { email };
     const user = await userCollection.findOne(query);
     res.send({ admin: user?.role === "admin" });
   });
 
-  app.put("/users/admin/:email", verifyToken, async (req, res) => {
+  app.put("/users/admin/:email", verifyToken, verifyAdmin, async (req, res) => {
     const result = await userCollection.updateOne(
       { email: req.params.email },
       {
@@ -84,26 +84,43 @@ const client = new MongoClient(process.env.DB_URI, {
     res.send(result);
   });
 
-  app.delete("/users/:id", verifyToken, async (req, res) => {
+  app.delete("/users/:id", verifyToken, verifyAdmin, async (req, res) => {
     const result = await userCollection.deleteOne({
       _id: new ObjectId(req.params.id),
     });
     res.send(result);
   });
 
-  app.delete("/donars/:id", verifyToken, async (req, res) => {
+  app.delete("/donars/:id", verifyToken, verifyAdmin, async (req, res) => {
     const result = await donationProfileCollection.deleteOne({
       _id: new ObjectId(req.params.id),
     });
     res.send(result);
   });
 
-  app.delete("/requests/:id", verifyToken, async (req, res) => {
-    const result = await requestCollection.deleteOne({
-      _id: new ObjectId(req.params.id),
-    });
-    res.send(result);
-  });
+  app.delete(
+    "/donation-profile",
+    verifyToken,
+    verifyAdmin,
+    async (req, res) => {
+      const result = await donationProfileCollection.deleteOne({
+        email: req.user.email,
+      });
+      res.send(result);
+    }
+  );
+
+  app.delete(
+    "/admin/requests/:id",
+    verifyToken,
+    verifyAdmin,
+    async (req, res) => {
+      const result = await requestCollection.deleteOne({
+        _id: new ObjectId(req.params.id),
+      });
+      res.send(result);
+    }
+  );
   // admin routes end
   app.post("/users", async (req, res) => {
     const user = req.body;
